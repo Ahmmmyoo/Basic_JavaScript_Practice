@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DOM</title>
-    <script src="dom.js"></script>
+    <script defer src="dom.js"></script>
   </head>
   <body>
     <header>
@@ -13,7 +13,14 @@
     <main>
       <article>
         <h3 id="shoppingList">Shopping List</h3>
-        <p class="paraShop">This is a Shopping List, the first two items are very important.</p>
+        <p class="paraShop">
+          This is a Shopping List, the first two items are very important.
+        </p>
+        <button class="btn">Click Me!</button>
+        <br />
+        <br />
+        <input id="userInput" type="text" placeholder="Enter Items" />
+        <button id="enter">Enter</button>
         <ul>
           <li class="item i1" id="item1">List Item 1</li>
           <li class="item i2" id="item2">List Item 2</li>
