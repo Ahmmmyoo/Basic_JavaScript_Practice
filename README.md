@@ -105,3 +105,5 @@ The children property returns a collection of an element's child elements.
 The children property returns an HTMLCollection object.
 
 #### It is important to CACHE selectors in variables
+
+what should we do next???
