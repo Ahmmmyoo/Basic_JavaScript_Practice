@@ -108,3 +108,4 @@ The children property returns an HTMLCollection object.
 
 what should we do next???
 no updates?
+bruh, get going
