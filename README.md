@@ -108,4 +108,11 @@ The children property returns an HTMLCollection object.
 
 #### Higher Order Function
 
-
+#### ES6
+- `const` Constants (global and functional constants with same name can have different values)
+- `let` Let Keyword (makes a block scoped variable)
+- Default Paraemters
+- `...` spread operator, used as `...arrayName`
+- Template String, wrap in ` `` `
+- - Does not ignore line breaks or white spaces
+- - use ` ${name} ` to add name variable
