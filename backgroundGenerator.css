@@ -1,0 +1,30 @@
+body {
+  font-family: "Haettenschweiler", "Arial Narrow Bold", sans-serif;
+  color: rgba(0, 0, 0, 0.5);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 2.5rem;
+  top: 15%;
+  background: linear-gradient(to right, red, yellow);
+  background-position: center;
+  background-size: cover;
+}
+
+h1 {
+  font-weight: 300;
+  width: 100%;
+  font-size: calc(4rem + 2vw);
+}
+
+h2 {
+  font-weight: 100;
+  width: 100%;
+  font-size: calc(1.5rem + 1.5vw);
+}
+
+h3 {
+  font-family: 'Courier New';
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: calc(0.5rem + 0.5vw);
+}
