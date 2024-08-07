@@ -106,3 +106,6 @@ The children property returns an HTMLCollection object.
 
 #### It is important to CACHE selectors in variables
 
+#### Higher Order Function
+
+
