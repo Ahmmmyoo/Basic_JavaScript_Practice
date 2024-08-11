@@ -125,11 +125,11 @@ var smallNinja = {
 console.log(smallNinja.smallName);
 
 var bigNinja = {
-  bigName, bigBelt, 
+  bigName, bigBelt,
   // chop: function(chopTimes) {  // old way
   //   console.log(`you chopped the enemy ${chopTimes} times`);
   // },
-  chop (chopTimes) {  // new way
+  chop(chopTimes) {  // new way
     console.log(`you chopped the enemy ${chopTimes} times`);
   }
 };
@@ -137,3 +137,36 @@ var bigNinja = {
 console.log(bigNinja.bigName);
 
 bigNinja.chop(4);
+
+// New String Methods --------------------------------------
+
+var strNewStringMethods1 = "graaaaaavy ",
+  strNewStringMethods2 = "goodbye",
+  strNewStringMethods3 = "Morning",
+  strNewStringMethods4 = "apple are oranges";
+
+// repeat method
+console.log(strNewStringMethods1.repeat(4));
+
+// startsWith method
+console.log("startsWith:")
+console.log(strNewStringMethods2.startsWith("good"));
+console.log(strNewStringMethods2.startsWith("bye"));
+console.log(strNewStringMethods2.startsWith("bye", 4));
+
+// endsWith method
+console.log("endsWith:");
+console.log(strNewStringMethods3.endsWith("ing"));
+console.log(strNewStringMethods3.endsWith("Morn"));
+console.log(strNewStringMethods3.endsWith("Morn", 4));
+console.log(strNewStringMethods3.endsWith("Mo", 2));
+
+// includes method
+console.log("includes:");
+console.log(strNewStringMethods4.includes("apple"));
+console.log(strNewStringMethods4.includes("apples"));
+console.log(strNewStringMethods4.includes(""));
+console.log(strNewStringMethods4.includes(" "));
+console.log(strNewStringMethods4.includes("a"));
+
+
