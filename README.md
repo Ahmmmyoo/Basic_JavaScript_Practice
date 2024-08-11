@@ -120,3 +120,4 @@ The children property returns an HTMLCollection object.
 - New String Methods
 - Arrow Functions
 - Sets
+- Generators

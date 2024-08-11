@@ -240,4 +240,30 @@ console.log(duplicateNames);
 console.log(noDuplicateNames);
 console.log(newArr);
 
+// Generators ----------------------------------------------------
+
+console.log("Generators");
+
+// function normalFunc() {
+//   console.log("pear");
+//   console.log("banana");
+//   console.log("apple");
+// }
+// normalFunc();
+
+function* genFunc() {
+  var x1 = yield console.log("pear"); // yield = pause after this line
+  var x2 = yield console.log("banana");
+  var x3 = yield console.log("apple");
+  // console.log("all done");
+  return x1 + x2 + x3;
+}
+
+var myGen = genFunc();
+
+// myGen.next(); // play
+console.log(myGen.next());
+console.log(myGen.next(10));
+console.log(myGen.next(5));
+console.log(myGen.next(3));
 
