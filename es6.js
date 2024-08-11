@@ -210,3 +210,34 @@ var greenBelt = {
 }
 
 greenBelt.chop(5);
+
+
+// Sets ----------------------------------------------------
+
+var nameSet = new Set();
+
+s = () => console.log(nameSet);
+
+nameSet.add("Ryu").add("Ryu");
+nameSet.add("Sam");
+nameSet.add("Shawn").add("Sean").add("Ryu");
+s();
+
+nameSet.delete("Ryu");
+// nameSet.delete("Ryu"),delete("Sam"); // does not work
+// nameSet.clear(); // clears the set
+s();
+
+log("Removing Duplicates using sets:");
+
+var duplicateNames = ["Ryu", "Nin", "Cyri", "Hob", "Nin", "Ryu", "ryu", "Hob"];
+
+var noDuplicateNames = new Set(duplicateNames);
+
+newArr = [...noDuplicateNames]; // you can also overwrite the old array with duplicates
+
+console.log(duplicateNames);
+console.log(noDuplicateNames);
+console.log(newArr);
+
+

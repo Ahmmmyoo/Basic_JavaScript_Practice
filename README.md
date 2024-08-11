@@ -119,3 +119,4 @@ The children property returns an HTMLCollection object.
 - Object Literal Enhancements
 - New String Methods
 - Arrow Functions
+- Sets
