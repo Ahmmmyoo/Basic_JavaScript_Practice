@@ -118,3 +118,4 @@ The children property returns an HTMLCollection object.
 - - use ` ${name} ` to add name variable
 - Object Literal Enhancements
 - New String Methods
+- Arrow Functions

@@ -169,4 +169,44 @@ console.log(strNewStringMethods4.includes(""));
 console.log(strNewStringMethods4.includes(" "));
 console.log(strNewStringMethods4.includes("a"));
 
+// Arrow Functions -----------------------------------------
 
+// var ninjaGreets = function() {
+//   console.log("hiiiiiiiiii");
+// };
+
+// var ninjaGreets = () => {
+//   console.log("hiiiiiiiiii");
+// };
+
+var ninjaGreets = () => console.log("hiiiiiiiiii");
+var ninjaGreetsWithName = (ninjaName) => console.log(`hiiiyaaa ${ninjaName}`);
+
+ninjaGreets();
+ninjaGreetsWithName("Ryu");
+
+// var greenBelt = {
+//   name: "GreenLantern",
+//   chop(xTimes) {
+//     window.setInterval(function () {
+//       if (xTimes > 0) {
+//         console.log(this.name + " chopped the watermellon");
+//         x--;
+//       }
+//     }, 1000);
+//   }
+// }
+
+var greenBelt = {
+  name: "GreenLantern",
+  chop(xTimes) {
+    window.setInterval(() => {
+      if (xTimes > 0) {
+        console.log(this.name + " chopped the watermellon");
+        xTimes--;
+      }
+    }, 1000);
+  }
+}
+
+greenBelt.chop(5);
