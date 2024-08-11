@@ -116,3 +116,4 @@ The children property returns an HTMLCollection object.
 - Template String, wrap in ` `` `
 - - Does not ignore line breaks or white spaces
 - - use ` ${name} ` to add name variable
+- Object Literal Enhancements

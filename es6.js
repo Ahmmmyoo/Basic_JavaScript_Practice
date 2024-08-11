@@ -112,4 +112,28 @@ strTemp("aa", "bbb", "sdf");
 
 console.log(` hmmmm sum of 5 and 8 is ${5 + 8}`);
 
+var bigName = "Crystal";
+var bigBelt = "Black";
+var smallName = "Sam";
+var smallBelt = "Pink";
 
+var smallNinja = {
+  smallName: smallName,
+  smallBelt: smallBelt
+};
+
+console.log(smallNinja.smallName);
+
+var bigNinja = {
+  bigName, bigBelt, 
+  // chop: function(chopTimes) {  // old way
+  //   console.log(`you chopped the enemy ${chopTimes} times`);
+  // },
+  chop (chopTimes) {  // new way
+    console.log(`you chopped the enemy ${chopTimes} times`);
+  }
+};
+
+console.log(bigNinja.bigName);
+
+bigNinja.chop(4);
