@@ -1,3 +1,4 @@
 {
   "editor.snippetSuggestions": "top",
+  "codeium.enableCodeLens": false,
 }
