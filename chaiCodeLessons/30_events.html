@@ -1,0 +1,60 @@
+<!-- // Events in JS -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Events in JS</title>
+</head>
+<body style="background-color: #242424; padding: 30px;">
+  <div id="colors" style="display: flex; flex-direction: row; flex-wrap: wrap; gap: 20px;">
+    <div id="purple" style="width: 100px; height: 100px; text-align: center; background-color: purple; border-radius: 15px;">purple</div>
+    <div id="orange" style="width: 100px; height: 100px; text-align: center; background-color: orange; border-radius: 15px;">orange</div>
+    <div id="blue" style="width: 100px; height: 100px; text-align: center; background-color: blue; border-radius: 15px;">blue</div>
+    <div id="pink" style="width: 100px; height: 100px; text-align: center; background-color: pink; border-radius: 15px;">pink</div>
+    <div id="red" style="width: 100px; height: 100px; text-align: center; background-color: red; border-radius: 15px;">red</div>
+    <div id="green" style="width: 100px; height: 100px; text-align: center; background-color: green; border-radius: 15px;">green</div>
+    <div id="peru" style="width: 100px; height: 100px; text-align: center; background-color: peru; border-radius: 15px;">peru</div>
+    <div id="yellow" style="width: 100px; height: 100px; text-align: center; background-color: yellow; border-radius: 15px;">yellow</div>
+    <div id="aquamarine" style="width: 100px; height: 100px; text-align: center; background-color: aquamarine;border-radius: 15px;">aquamarine</div>
+    <div id="burlywood" style="width: 100px; height: 100px; text-align: center; background-color: burlywood;border-radius: 15px;">burlywood</div>
+    <div id="tomato" style="width: 100px; height: 100px; text-align: center; background-color: tomato;border-radius: 15px;">tomato</div>
+  </div>
+</body>
+<script>
+  const colors = document.getElementById("colors")
+  
+  const colorsArr = Array.from(colors.children)
+
+  // colorsArr.forEach((color) => {
+  //   console.log(color);
+  //   const id = color.id
+  //   color.addEventListener('click', function (e) {
+  //     // alert(id)   
+  //     // e.stopPropagation() // stops the bubbling   
+  //   }, false) // false: bubbling (specific to big), true: capturing (big to specific)
+  // })
+
+  // type, timestamp, defaultPrevented
+  // target, toElement, sourceElement, currentTarget
+  // clientX, clientY, screenX, screenY
+  // altkey, ctrlkey, shiftkey, keyCode
+
+  //  colorsArr[0].addEventListener('click', function(e){
+  //   e.preventDefault()
+  //   console.log(`${colorsArr[0].id} clicked`);
+  //  }, false)
+
+  // document.querySelector('#colors').addEventListener('click', function(e) {
+  //   // console.log(e.target);
+  //   console.log(e.target.parentNode);
+  //   // const rm = e.target
+  //   // rm.remove()
+  //   // e.target.remove()
+  // })
+
+  
+
+</script>
+</html>
