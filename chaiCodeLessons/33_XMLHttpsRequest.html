@@ -1,0 +1,94 @@
+<!-- // API request an V8 engine -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XMLHttpRequest</title>
+</head>
+<body style="background-color: #242424; color: beige;">
+  
+</body>
+<script>
+// xmlhttprequest
+console.log("********** XMLHttpRequest Practice **********");
+
+const requestURL = 'https://api.sampleapis.com/futurama/characters';
+
+const xhr = new XMLHttpRequest();
+
+(function() {
+  const div = document.createElement('div');
+  div.innerHTML = '<h1>Characters from Futurama</h1>';
+  document.body.appendChild(div);  
+})();
+
+
+xhr.onreadystatechange = function() {
+  console.log(`XHR ready state: ${xhr.readyState}`);
+
+  if (xhr.readyState === 4) {
+    const data = JSON.parse(this.responseText);
+
+    const mainDiv = document.createElement('div');
+    mainDiv.style.display = 'flex';
+    mainDiv.style.flexDirection = 'row';
+    mainDiv.style.flexWrap = 'wrap';
+    mainDiv.style.justifyContent = 'center';
+    document.body.appendChild(mainDiv);
+
+    data.forEach(character => {
+
+      const masterDiv = document.createElement('div');
+      masterDiv.style.display = 'flex';
+      masterDiv.style.flexDirection = 'column';
+      // masterDiv.style.flexWrap = 'nowrap';
+      masterDiv.style.justifyContent = 'center';
+      masterDiv.style.border = '1px solid #f3f3f3';
+      masterDiv.style.margin = '10px';
+      masterDiv.style.borderRadius = '15px';
+      masterDiv.style.width = '100px';
+      masterDiv.style.height = '300px';
+
+      const img = document.createElement('img');
+      img.src = character.images.main;
+      img.setAttribute('alt', `${character.name.first} ${character.name.middle} ${character.name.last}`);
+      img.setAttribute('height', `100px`);
+      img.setAttribute('weidth', `auto`);
+      img.style.margin = '15px';
+
+      masterDiv.appendChild(img);
+      const characterName = document.createElement('div');
+      characterName.innerHTML = `<h4 style="text-align: center;">${character.name.first} ${character.name.middle} ${character.name.last}</h4>`;
+      masterDiv.appendChild(characterName);
+
+      const characterSpecies = document.createElement('p');
+      characterSpecies.innerHTML = `<p style="text-align: center;">Species: ${character.species}</p>`;
+      masterDiv.appendChild(characterSpecies);
+
+      const characterAge = document.createElement('p');
+      characterAge.innerHTML = `<p style="text-align: center;">Age: ${character.age}</p>`;
+      masterDiv.appendChild(characterAge);
+
+      // const characterQuote = document.createElement('p');
+      // characterQuote.innerHTML = `<q">${character.sayings[Math.floor(Math.random() * (character.sayings.length))]}</q>`;
+      // masterDiv.appendChild(characterQuote);
+      
+      mainDiv.appendChild(masterDiv);
+
+      // console.log(`Character: ${character.name.first} ${character.name.middle} ${character.name.last}`);
+      // console.log(`Species: ${character.species}`);
+      // console.log(`Age: ${character.age}`);            
+      // console.log(`Quote: ${character.sayings[Math.floor(Math.random() * (character.sayings.length))]}`)
+      });
+
+    console.log(``);
+  }
+}
+
+xhr.open('GET', requestURL);
+
+xhr.send();
+</script>
+</html>
