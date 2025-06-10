@@ -1,0 +1,102 @@
+<!-- // Lexical scoping and Closure in JS -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Closure & Lexical Scoping</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body style="background-color: #313131">
+    <button id="orange">Orange</button>
+    <button id="green">Green</button>
+  </body>
+
+  <script>
+    // function init() {
+    //   let name = "Mozilla";
+    //   function displayName() {
+    //     console.log(name); // works (lexical scoping)
+    //   }
+    //   displayName();
+    // }
+    // init();
+
+    // function outer() {
+    //   let username = "hitesh";
+    //   console.log("OUTER", secret); // doesn't work, secret is undefined, because it's in inner scope
+    //   function inner() {
+    //     let secret = "my123";
+    //     console.log("inner", username); // works
+    //   }
+    //   function innerTwo() {
+    //     console.log("innerTwo", username); // works
+    //     console.log(secret); // doesn't work, secret is undefined
+    //   }
+    //   inner();
+    //   innerTwo();
+    // }
+    // outer();
+    // console.log("TOO OUTER", username); // works
+
+    // function makeFunc() {
+    //   const name = "Mozilla";
+    //   function displayName() {
+    //     console.log(name);
+    //   }
+    //   return displayName; // returns the function with the lexical scope
+    // }
+
+    // const myFunc = makeFunc();
+    // myFunc();
+  </script>
+
+  <script>
+    // document.getElementById("orange").onclick = function () {
+    //   document.body.style.backgroundColor = `orange`;
+    // };
+    // document.getElementById("green").onclick = function () {
+    //   document.body.style.backgroundColor = `green`;
+    // };
+
+    function clickHandler(color) {
+      // document.body.style.backgroundColor = color;
+
+      return function () {
+        document.body.style.backgroundColor = `${color}`;
+      };
+    }
+
+    // document.getElementById("orange").onclick = clickHandler("orange");
+    // document.getElementById("green").onclick = clickHandler("green");
+
+    function getButtons() {
+      let buttons = document.getElementsByTagName("button");
+
+      // console.log(buttons);
+      
+
+      for (let button of buttons) {
+        button.onclick = clickHandler(button.id);
+      }
+    }
+
+    function makeButtons(colorsList) {
+      for (let color of colorsList) {
+        let button = document.createElement("button");
+        button.id = color;
+        button.innerText = color;
+        button.setAttribute("style", `margin: 5px; font-size: 16px;`);
+        document.body.appendChild(button);        
+      }
+    }
+
+    let colors = ["red", "green", "blue", "yellow", "orange", "black", "white", "brown"];
+
+    makeButtons(colors);
+
+    getButtons();
+
+  </script>
+</html>
