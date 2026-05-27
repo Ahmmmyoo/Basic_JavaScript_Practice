@@ -1,0 +1,58 @@
+<!doctype html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>JavaScript Background Color Switcher</title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="" />
+  </head>
+  <body>
+    <h1>Color Scheme Switcher</h1>
+    <div class="div">
+      <div class="box">white</div>
+      <div class="box">orange</div>
+      <div class="box">green</div>
+    </div>
+    <h2>
+      Try clicking on one of the colors above
+      <span>to change the background color of this page!</span>
+    </h2>
+    <script src="./p1-colorChanger.js" async defer></script>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        flex: auto;
+        align-items: center;
+        align-content: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .div {
+        display: flex;
+        flex: auto;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+      }
+      .box {
+        display: flex;
+        align-content: center;
+        align-items: center;
+        margin: 10px;
+        width: fit-content;
+        height: 30px;
+        padding: 10px 20px 10px 20px;
+        border: 1px solid black;
+        border-radius: 10px;
+      }
+    </style>
+  </body>
+</html>
