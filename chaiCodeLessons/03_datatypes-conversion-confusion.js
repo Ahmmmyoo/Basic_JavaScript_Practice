@@ -2,12 +2,12 @@
 
 let number = "10dfs";
 
-console.log(typeof number);
-console.log(typeof(number));
+console.log(typeof number); // string
+console.log(typeof(number)); // string
 
-let numberConvert = Number(number);
-console.log(typeof numberConvert);
-console.log(numberConvert);
+let numberConvert = Number(number); //number
+console.log(typeof numberConvert); // NaN
+console.log(numberConvert); // true
 
 // 33 => 33
 // "33" => 33

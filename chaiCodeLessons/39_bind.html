@@ -19,7 +19,8 @@
         // requirement
         document
         .querySelector("button")
-        .addEventListener("click", this.handleClick.bind(this));
+        .addEventListener("click", this.handleClick.bind(this)); // Bind the handleClick method to the React instance
+        // .addEventListener("click", this.handleClick); // This will not work as expected because 'this' will refer to the button element, not the React instance
       }
 
       handleClick() {
@@ -31,3 +32,5 @@
     const app = new React();
   </script>
 </html>
+
+// binds remembers this and can't be overridden by call or apply. or another bind.

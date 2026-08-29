@@ -6,16 +6,28 @@
 // ✔️ You cannot modify const, even in loops.
 // ✔️ Declaring const outside the loop keeps it the same for all iterations.
 
+for(let i = 0; i < 5; i++){
+  console.log(`testing ${i}`);
+}
+// let i = 0 runs once at the beginning
+// i < 5 checked before every iteration
+// i++ runs after each iteration
+
 for (let i = 0; i < 10; i++) {
   if (i === 5) {
     // console.log(i," inner start point");
     // break;
     // continue;
-    // console.log(i, " inner end point");
-    
+    // console.log(i, " inner end point");    
   }
   // console.log(i);
 }
+
+// Infinite for Loop; valid
+// for(;;){
+//   console.log("Runs forever");
+// }
+// you usually stop it with break;
 
 for (let i = 0; i < 3; i++) {
   // console.log(`Outer Loop i:${i}`);
@@ -23,6 +35,14 @@ for (let i = 0; i < 3; i++) {
     // console.log(`Inner Loop i:${i} j:${j}`);
   }
 }
+
+let tableArray = new Array([]);
+for(let i = 0; i <= 10; i++){
+  tableArray[i] = []
+  for(let j = 0; j <= 10; j++)
+    tableArray[i][j] = (i*j);
+}
+// console.table(tableArray);
 
 let myArray = ["flash", "batman", "superman", "ironman", "spiderman"];
 

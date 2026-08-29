@@ -12,6 +12,8 @@ for (const num of arr) {
 
 const str = "hello world!";
 
+// for..of gives the values...
+
 for (const char of str) {
   // console.log(char);
 }
@@ -54,6 +56,8 @@ const myObj = {
   swift: 'swift by apple',
 }
 
+// for...in gives the keys
+
 for (const key in myObj) {
   // console.log(`${key} shortcut is for ${myObj[key]}`);
 }
@@ -77,7 +81,7 @@ arr.forEach((item) => {
 })
 
 function printMe(item) {
-  // console.log(item);
+  console.log(item);
 }
 
 // arr.forEach(printMe);

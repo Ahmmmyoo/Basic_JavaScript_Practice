@@ -1,5 +1,9 @@
 // Arrays in JS | PACKED vs HOLEY | JSVU (Javascript (engine) Version Updater) | V8-debug
 
+// explained holey vs packed arrays in js:
+// https://v8.dev/blog/elements-kinds
+// holey arrays are very expensive in js, packed arrays are very fast in js
+
 const myArr = []
 // %DebugPrint(myArr)
 
@@ -26,8 +30,9 @@ console.log(arrTwo.length);
 console.log(arrTwo[9]);
 
 
-// bound check 
-// hasOwnProperty(arrTwo, 9)
+// there is no value at index 9, so it is a hole. this is how it will check it and it's and expensive operation.
+// bound check // out of array or not? 
+// hasOwnProperty(arrTwo, 9) 
 // hasOwnProperty(arrTwo.prototype, 10)
 // hasOwnProperty(Object.prototype, 10)
 

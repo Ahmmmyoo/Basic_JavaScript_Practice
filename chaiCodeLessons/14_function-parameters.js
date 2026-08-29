@@ -22,10 +22,20 @@ function addTwoNumbers(number1, number2){
   console.log("Will not Execute"); // code won't execute after return
 }
 
-// addTwoNumbers(3,4);
+addTwoNumbers() // this will return a NaN
+addTwoNumbers(3,4); // this will return 7
+addTwoNumbers(3,"4") // this will convert to string and return 34
+addTwoNumbers(3, "a") // this will return 3a
 
 const result = addTwoNumbers(3,4);
 // console.log("Result: ", result);
+
+function addOne(number1) {
+  let result = number1 + 1
+  console.log("This will print")
+  return result
+  console.log("This will not print")
+}
 
 function loginUserMessage(username) {
   return `${username} just logged in`
@@ -45,3 +55,8 @@ function loginUserMessage2(username) {
 
 console.log(loginUserMessage2());
 
+function greetUser(username = "Guest") { // default parameter
+  return `Welcome ${username}`
+}
+
+greetUser("K"); // Welcome K

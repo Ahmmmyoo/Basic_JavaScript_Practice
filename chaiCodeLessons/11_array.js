@@ -18,6 +18,8 @@ let myArr2 = new Array(12, 23, 34, 45, 56, 67, 78);
 
 // slice , splice
 
+// splice edits the original array
+
 let myArr3 = new Array(0,1,2,3,4,5)
 
 // console.log("A", myArr3);

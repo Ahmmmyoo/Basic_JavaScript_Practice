@@ -27,32 +27,38 @@
   
   const colorsArr = Array.from(colors.children)
 
-  // colorsArr.forEach((color) => {
-  //   console.log(color);
-  //   const id = color.id
-  //   color.addEventListener('click', function (e) {
-  //     // alert(id)   
-  //     // e.stopPropagation() // stops the bubbling   
-  //   }, false) // false: bubbling (specific to big), true: capturing (big to specific)
-  // })
+  colorsArr.forEach((color) => {
+    console.log(color);
+    const id = color.id
+    color.addEventListener('click', function (e) {
+      alert(id)   
+      e.stopPropagation() // stops the bubbling   
+    }, false) // false: bubbling (specific to big), true: capturing (big to specific)
+  })
 
   // type, timestamp, defaultPrevented
   // target, toElement, sourceElement, currentTarget
   // clientX, clientY, screenX, screenY
   // altkey, ctrlkey, shiftkey, keyCode
 
-  //  colorsArr[0].addEventListener('click', function(e){
-  //   e.preventDefault()
-  //   console.log(`${colorsArr[0].id} clicked`);
-  //  }, false)
+   colorsArr[0].addEventListener('click', function(e){
+    e.preventDefault()
+    console.log(`${colorsArr[0].id} clicked`);
+   }, false)
 
-  // document.querySelector('#colors').addEventListener('click', function(e) {
-  //   // console.log(e.target);
-  //   console.log(e.target.parentNode);
-  //   // const rm = e.target
-  //   // rm.remove()
-  //   // e.target.remove()
-  // })
+  document.querySelector('#colors').addEventListener('click', function(e) {
+    console.log(e.target);
+    console.log(e.target.parentNode);
+    const rm = e.target.parentNode
+    // rm.remove()
+    // e.target.remove()
+    // rm.parentNode.removeChild(rm)
+
+    if(e.target.tagName === 'IMG') {
+      rm.remove()
+    }
+
+  })
 
   
 

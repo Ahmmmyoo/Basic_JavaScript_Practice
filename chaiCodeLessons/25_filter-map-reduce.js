@@ -10,10 +10,12 @@ const coding = ["js", "python", "c++", "java", "ruby"];
 
 const myNums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-// const newNums = myNums.filter( (num) => num > 4 )
+// filter returns the values that meet the condition...
+// const newNums0 = myNums.filter( (num) => num > 4 )
 const newNums = myNums.filter((num) => {
   return num > 4; // have to return explicitly
 })
+// console.log(newNums0);
 // console.log(newNums);
 
 const nNums = []
@@ -91,24 +93,24 @@ const nnNums = myNums
 
 const num = [1, 2, 3, 4];
 
-// const myTotal = num.reduce((total, num) => total + num, 0)
+const myTotal_0 = num.reduce((total, num) => total + num, 0)
 
-// const errorTotal = num.reduce((total, num) => {
-//   console.log(`acc: ${total}, num: ${num}`);
-//   return total + num
-// }, 0)
-// console.log(errorTotal);
+const myTotal_1 = num.reduce((total, num) => {
+  // console.log(`acc: ${total}, num: ${num}`);
+  return total + num
+}, 0)
+// console.log(myTotal_1);
 
 
-// const myTotal = num.reduce(function (total, num) {
-//   console.log(`acc: ${total}, num: ${num}`);
-//   return total + num
-// }, 0)
-// console.log(myTotal);
+const myTotal_2 = num.reduce(function (total, num) {
+  // console.log(`acc: ${total}, num: ${num}`);
+  return total + num
+}, 0)
+// console.log(myTotal_2);
 
-// const myTotal = num
-//   .reduce((acc, curr) => acc + curr, 0)
-// console.log(myTotal);
+const myTotal_3 = num
+  .reduce((acc, curr) => acc + curr, 0)
+// console.log(myTotal_3);
 
 const shoppingCart = [
   {
@@ -117,23 +119,19 @@ const shoppingCart = [
   },
   {
     item: "banana",
-    price: 3.99
+    price: 3.73
   },
   {
     item: "orange",
-    price: 4.99
+    price: 4.342
   },
   {
     item: "grape",
-    price: 5.99
+    price: 5.642
   }
 ]
 
-const myTotal = shoppingCart
+const myTotal_4 = shoppingCart
   .reduce((acc, item) => acc + item.price, 0)
-  // .toLocaleString("en-US", {
-  //   style: "currency",
-  //   currency: "USD"
-  // })
-console.log(myTotal);
-
+  .toLocaleString("en-US", {style: "currency", currency: "USD"})
+// console.log(myTotal_4);

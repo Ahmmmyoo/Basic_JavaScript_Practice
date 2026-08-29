@@ -105,6 +105,16 @@ val4 = null ?? undefined ?? 20 ?? 5 // 20
 val5 = NaN ?? 5 // NaN
 val6 = {} ?? [] ?? 45 // {}
 
+function throwError() {
+  throw new Error("Error Thrown");
+}
+function returnError(params) {
+  return new Error("Error Returned")
+}
+
+val7 = null ?? returnError(); // returnError; saves it to val7
+// val8 = null ?? throwErrorError(); // throwError; halts execution
+
 
 // Terniary Operator
 // condition ? true : false

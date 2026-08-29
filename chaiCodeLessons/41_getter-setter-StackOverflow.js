@@ -28,6 +28,10 @@ const user2 = new User("smith@com", "abcdef");
 console.log(user1.password);
 console.log(user2.password);
 
+// Yes, name and _name are two different properties. _name is usually used to store the actual value, while name is the getter/setter interface used to control access to that value. For example, get name() { return this._name } means when you read person.name, JavaScript returns _name; and set name(value) { this._name = value } means when you do person.name = "Ali", it stores "Ali" in _name. The _ is just a naming convention—it doesn't make the variable truly private.
+
+
+
 // for (let [key, value] of Object.entries(user1)) {
 //   console.log(`${key}: ${value}`);
 // }

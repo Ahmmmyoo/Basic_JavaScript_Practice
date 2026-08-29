@@ -69,6 +69,12 @@ function User(username, loginCount, signedIn) {
   return this // by default it is already done
 }
 
+// new keyword
+// 1. creates a new empty object
+// 2. sets the value of this to be the new empty object
+// 3. calls the constructor function to build the object
+// 4. returns the new object from the constructor function
+
 // const userOne = User("Smith Kent", 3, true)
 // const userTwo = User("Chai Smith", 2, false) // overwrites userOne
 const userOne = new User("Smith Kent", 3, true)
