@@ -36,11 +36,6 @@ async function getUser() {
         "https://jsonplaceholder.typicode.com/users/1"
     );
 
-    // error handling
-    if(!response.ok) { // checks status in range 200-299
-        throw new Error(`Request Failed: ${response.status}`)
-    }
-
     const user = await response.json();
 
     return user;
@@ -96,3 +91,27 @@ createPost();
 
 
 
+// HTTP Errors vs Fetch Errors
+async function getUsersErrHndle() {
+    try {
+        const response = await fetch("https://jsonplaceholder.typicode.com/users");
+
+        // error handling
+        if (!response.ok) { // checks if status is in range 200-299
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+
+        const users = await response.json();
+
+        return users;
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+// console.log(getUsersErrHndle().then(urs => urs[3]?.name)); 
+// returns a pending promise
+// as .then() returns a promise
+
+// use await for pending promise
+console.log(await getUsersErrHndle().then(urs => urs[3]?.name)); 
