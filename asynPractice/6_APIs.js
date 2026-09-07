@@ -1,5 +1,41 @@
 // fetch() -> Promise<Response>
 
+// when you do 
+const p = fetch('https://jsonplaceholder.typicode.com/users/1');
+// it immediately returns a Promise, but that Promise is not resolved yet.
+
+// fetch()
+//    ↓
+// returns Promise
+//    ↓
+// pending ⏳
+//    ↓
+// network request happens...
+//    ↓
+// server responds
+//    ↓
+// Promise fulfilled with a Response object
+
+console.log(`p: --- `,p); // p: --- Promise { <pending> }
+
+// The response here is a Response object, not yet the actual JSON/data inside the response.
+// Here's a Promise. Its result will be a Response once the network operation reaches the point where a response is available.
+
+const p2 = await p;
+// this is a response object
+console.log('p2: --- ',p2);
+
+const p3 = p2.json();
+// this also returns a promise.
+// Here's another Promise. Its result will be the parsed body once the body has been read and parsed.
+console.log('p3: --- ',p3); 
+
+const p4 = await p3;
+// now this is the parsed response...
+console.log('p4: --- ',p4);
+
+
+
 // Browser
 //    │
 //    │ HTTP Request       Method URL Headers Body
