@@ -104,3 +104,10 @@ Promise.any() // Give me the first Promise that fulfills successfully.
 // Promise.allSettled()     All	                    Never because of individual rejection
 // Promise.race()	        First settled	        First settled rejects
 // Promise.any()	        First fulfilled	        All reject
+
+
+
+// Concurrency means multiple tasks are in progress during the same period.
+// Parallelism means tasks are literally executing at the same time, typically using multiple CPU cores/threads.
+// For normal frontend async programming, concurrency is the concept you'll encounter much more often.
+// Asynchronous JavaScript allows work to overlap rather than forcing everything to happen sequentially.
