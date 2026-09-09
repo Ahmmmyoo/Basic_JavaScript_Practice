@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <!--
+    Makes the page responsive on phones and tablets.
+  -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>DuckDuckGo Search</title>
+
+  <style>
+    /*
+      This CSS isn't important for the API concepts.
+      It simply gives us a small, clean UI to test the code.
+    */
+
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      color: #222;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px 14px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #666;
+    }
+
+    #status {
+      margin: 15px 0;
+      color: #666;
+    }
+
+    .error {
+      color: #c00;
+    }
+
+    .result {
+      border-bottom: 1px solid #eee;
+      padding: 15px 0;
+    }
+
+    .result h3 {
+      margin: 0 0 8px;
+    }
+
+    .result p {
+      margin: 0 0 8px;
+      line-height: 1.5;
+    }
+
+    .result a {
+      color: #06c;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>DuckDuckGo Search</h1>
+
+  <!--
+    The user types a search here.
+
+    We listen for the "input" event in JavaScript.
+    Every time the user types or deletes a character,
+    that event fires.
+  -->
+  <input
+    id="searchInput"
+    type="search"
+    placeholder="Search..."
+    autocomplete="off"
+  >
+
+  <!--
+    We use this element to display things like:
+
+      Searching...
+      Waiting 500ms...
+      Retrying in 1.4s...
+      Search failed...
+
+  -->
+  <div id="status"></div>
+
+  <!--
+    Search results will be inserted here using JavaScript.
+  -->
+  <div id="results"></div>
+
+
+  <script>
+
+    /*
+    ============================================================
+    1. GET REFERENCES TO OUR HTML ELEMENTS
+    ============================================================
+
+    document.getElementById() finds an HTML element by its id.
+
+    Instead of repeatedly doing:
+
+        document.getElementById("searchInput")
+
+    we store the element in a variable and reuse it.
+    */
+
+    const searchInput = document.getElementById("searchInput");
+    const status = document.getElementById("status");
+    const results = document.getElementById("results");
+
+
+    /*
+    ============================================================
+    2. CONFIGURATION
+    ============================================================
+
+    Keeping these values in constants makes the code easier
+    to understand and change later.
+
+    For example, if you wanted a 1-second debounce:
+
+        const DEBOUNCE_MS = 1000;
+
+    You only need to change one value.
+    */
+
+    // Wait 500ms after the user stops typing before searching.
+    const DEBOUNCE_MS = 500;
+
+    // Each individual HTTP request is allowed to run
+    // for at most 5 seconds.
+    const TIMEOUT_MS = 5000;
+
+    // Number of retries AFTER the initial request.
+
+    /*
+      MAX_RETRIES = 3 means:
+
+        Attempt 1 = original request
+        Attempt 2 = retry #1
+        Attempt 3 = retry #2
+        Attempt 4 = retry #3
+
+      So there can be 4 total attempts.
+    */
+    const MAX_RETRIES = 3;
+
+
+    /*
+    ============================================================
+    EXPONENTIAL BACKOFF
+    ============================================================
+
+    When a request fails, we don't immediately send another
+    request.
+
+    Instead, we wait.
+
+    We use exponential backoff:
+
+        1 second
+        2 seconds
+        4 seconds
+
+    The formula is:
+
+        baseDelay * 2^attempt
+
+    For example:
+
+        attempt = 0
+        1000 * 2^0
+        = 1000ms
+        = 1 second
+
+        attempt = 1
+        1000 * 2^1
+        = 2000ms
+        = 2 seconds
+
+        attempt = 2
+        1000 * 2^2
+        = 4000ms
+        = 4 seconds
+
+    Why do this?
+
+    Imagine 10,000 clients all call an API at the same time.
+
+    If the server fails and every client immediately retries,
+    the server receives another huge wave of requests.
+
+    Exponential backoff spreads those retries out over time.
+    */
+
+    const BASE_RETRY_DELAY_MS = 1000;
+
+
+    /*
+    ============================================================
+    JITTER
+    ============================================================
+
+    We add a random amount of time to the retry delay.
+
+    For example:
+
+        Backoff = 1000ms
+        Jitter = 237ms
+
+        Total = 1237ms
+
+    Another client might get:
+
+        Backoff = 1000ms
+        Jitter = 481ms
+
+        Total = 1481ms
+
+    This prevents thousands of clients from retrying at
+    exactly the same moment.
+
+    This problem is sometimes called a "thundering herd".
+
+    Here we allow between 0 and 500ms of random jitter.
+    */
+
+    const JITTER_MS = 500;
+
+
+    /*
+    ============================================================
+    3. STATE VARIABLES
+    ============================================================
+
+    JavaScript is event-driven.
+
+    That means the browser is doing many things asynchronously.
+
+    We need a couple of variables to remember what's happening.
+    */
+
+
+    /*
+      Stores the timer created by setTimeout() for our debounce.
+
+      Example:
+
+        User types "a"
+        -> timer starts
+
+        User types "p"
+        -> old timer is cancelled
+        -> new timer starts
+
+        User types "p"
+        -> old timer is cancelled
+        -> new timer starts
+
+        User stops typing
+        -> 500ms passes
+        -> search starts
+    */
+    let debounceTimer = null;
+
+
+    /*
+      Stores the AbortController for the CURRENT search.
+
+      This is very important.
+
+      Suppose we're searching for:
+
+          "apple"
+
+      and the request is still running.
+
+      The user then changes the search to:
+
+          "apples"
+
+      We don't want "apple" to continue running.
+
+      So we call:
+
+          currentController.abort();
+
+      This cancels the previous operation.
+    */
+    let currentController = null;
+
+
+
+    /*
+    ============================================================
+    4. SLEEP FUNCTION
+    ============================================================
+
+    JavaScript does not have a built-in:
+
+        await sleep(1000);
+
+    function.
+
+    So we create one using Promise + setTimeout.
+
+    Normally you might write:
+
+        function sleep(ms) {
+          return new Promise(resolve => {
+            setTimeout(resolve, ms);
+          });
+        }
+
+    But our version does something extra:
+
+    It supports AbortController.
+
+    That means if we are waiting 4 seconds before retrying
+    and the user types a new search after 500ms, we can
+    cancel the 4-second wait immediately.
+
+    This is important because otherwise an old search could
+    wake up later and continue retrying.
+    */
+
+    function sleep(ms, signal) {
+
+      return new Promise((resolve, reject) => {
+
+        /*
+          If the operation was already cancelled before
+          sleep() was called, immediately reject.
+        */
+        if (signal.aborted) {
+
+          reject(
+            new DOMException(
+              "Request aborted",
+              "AbortError"
+            )
+          );
+
+          return;
+        }
+
+
+        /*
+          Start the timer.
+
+          Example:
+
+              setTimeout(resolve, 2000)
+
+          means the Promise becomes fulfilled after 2 seconds.
+        */
+        const timer = setTimeout(resolve, ms);
+
+
+        /*
+          Listen for the AbortController.
+
+          If someone calls:
+
+              controller.abort();
+
+          this function runs.
+        */
+        signal.addEventListener(
+          "abort",
+          () => {
+
+            /*
+              Cancel the JavaScript timer.
+            */
+            clearTimeout(timer);
+
+
+            /*
+              Reject the Promise.
+
+              Because we're using "AbortError", the caller
+              can recognize that this wasn't a normal failure.
+            */
+            reject(
+              new DOMException(
+                "Request aborted",
+                "AbortError"
+              )
+            );
+
+          },
+          {
+            /*
+              We only need this event listener once.
+            */
+            once: true
+          }
+        );
+      });
+    }
+
+
+
+    /*
+    ============================================================
+    5. FETCH WITH A TIMEOUT
+    ============================================================
+
+    fetch() itself doesn't give us a simple timeout option.
+
+    For example:
+
+        fetch(url)
+
+    could potentially remain pending for a very long time.
+
+    We want:
+
+        "If the server hasn't responded after 5 seconds,
+         cancel this request."
+
+    We accomplish that using AbortController + setTimeout.
+    */
+
+    async function fetchWithTimeout(url, signal) {
+
+      /*
+        This controller belongs specifically to the HTTP
+        request and its timeout.
+
+        We have two controllers conceptually:
+
+        1. "signal"
+           Controls the whole search operation.
+
+        2. "timeoutController"
+           Controls this particular HTTP request.
+      */
+      const timeoutController = new AbortController();
+
+
+      /*
+        Start a timer.
+
+        If 5000ms passes before fetch finishes:
+
+            timeoutController.abort();
+
+        This causes fetch() to stop.
+      */
+      const timeoutId = setTimeout(() => {
+
+        timeoutController.abort();
+
+      }, TIMEOUT_MS);
+
+
+      /*
+        We also need to connect the OUTER controller
+        to the INNER controller.
+
+        Why?
+
+        Suppose the request is currently running:
+
+            fetch(...)
+
+        and the user types another search.
+
+        The main search controller gets aborted.
+
+        We then want the actual fetch() request to abort too.
+      */
+      const onAbort = () => {
+
+        timeoutController.abort();
+
+      };
+
+
+      /*
+        Listen for cancellation of the entire search.
+      */
+      signal.addEventListener(
+        "abort",
+        onAbort,
+        {
+          once: true
+        }
+      );
+
+
+      try {
+
+        /*
+          fetch() returns a Promise.
+
+          "await" pauses this async function until fetch
+          either succeeds or throws an error.
+
+          The request will end when:
+
+          1. The server responds.
+          2. The 5-second timeout fires.
+          3. The user aborts the search.
+          4. A network error occurs.
+        */
+        return await fetch(url, {
+          signal: timeoutController.signal
+        });
+
+      } finally {
+
+        /*
+          IMPORTANT:
+
+          Whether fetch succeeds OR fails, we should clean up
+          the timeout.
+
+          Otherwise the timeout callback could remain scheduled
+          unnecessarily.
+        */
+        clearTimeout(timeoutId);
+
+
+        /*
+          Remove the event listener because this request
+          is finished.
+        */
+        signal.removeEventListener(
+          "abort",
+          onAbort
+        );
+      }
+    }
+
+
+
+    /*
+    ============================================================
+    6. SEARCH DUCKDUCKGO
+    ============================================================
+
+    This function contains our main API/retry logic.
+
+    It handles:
+
+      - HTTP request
+      - timeout
+      - retries
+      - exponential backoff
+      - jitter
+      - cancellation
+    */
+
+    async function searchDuckDuckGo(query, signal) {
+
+      /*
+        Build the API URL.
+
+        encodeURIComponent() is VERY important.
+
+        Suppose the user searches:
+
+            apple pie & cake
+
+        We cannot simply put that raw text into a URL.
+
+        encodeURIComponent() converts special characters
+        into a URL-safe representation.
+      */
+
+      const url =
+        "https://api.duckduckgo.com/" +
+        "?q=" + encodeURIComponent(query) +
+        "&format=json" +
+        "&no_html=1";
+
+
+      /*
+        If every attempt fails, we'll keep the last error here
+        so we can throw it at the end.
+      */
+      let lastError;
+
+
+      /*
+        attempt goes from 0 through MAX_RETRIES.
+
+        With MAX_RETRIES = 3:
+
+          attempt 0 = first request
+          attempt 1 = retry
+          attempt 2 = retry
+          attempt 3 = retry
+
+        Total = 4 requests maximum.
+      */
+
+      for (
+        let attempt = 0;
+        attempt <= MAX_RETRIES;
+        attempt++
+      ) {
+
+
+        /*
+          Before doing anything, check whether this search
+          has been cancelled.
+
+          This can happen when the user types a new query.
+        */
+        if (signal.aborted) {
+
+          throw new DOMException(
+            "Request aborted",
+            "AbortError"
+          );
+        }
+
+
+        try {
+
+          /*
+            Humans usually count attempts starting from 1.
+
+            JavaScript array/index-style counters usually
+            start from 0.
+
+            So:
+
+                attempt = 0
+                attemptNumber = 1
+          */
+          const attemptNumber = attempt + 1;
+
+
+          console.log(
+            `[Search] Attempt ${attemptNumber}/${MAX_RETRIES + 1}`
+          );
+
+
+          /*
+            Update the UI so the user knows what's happening.
+          */
+          status.textContent =
+            attempt === 0
+              ? "Searching..."
+              : `Retrying... attempt ${attemptNumber}`;
+
+
+          /*
+            Make the HTTP request.
+
+            This request has a maximum lifetime of 5 seconds.
+          */
+          const response = await fetchWithTimeout(
+            url,
+            signal
+          );
+
+
+          /*
+            IMPORTANT:
+
+            fetch() does NOT reject its Promise for HTTP errors
+            such as:
+
+                404
+                500
+                503
+
+            A response with HTTP 500 can still be a successful
+            fetch() operation.
+
+            Therefore we manually check response.ok.
+          */
+          if (!response.ok) {
+
+            throw new Error(
+              `HTTP ${response.status}: ${response.statusText}`
+            );
+          }
+
+
+          /*
+            Convert the HTTP response body into JavaScript.
+
+            The DuckDuckGo API returns JSON.
+
+            response.json() itself returns a Promise, so
+            we await it.
+          */
+          const data = await response.json();
+
+
+          console.log(
+            `[Search] Success on attempt ${attemptNumber}`
+          );
+
+
+          /*
+            Return the parsed JSON.
+
+            "return" resolves the Promise returned by this
+            async function.
+
+            The caller will receive the data here.
+          */
+          return data;
+
+
+        } catch (error) {
+
+          /*
+            Something went wrong.
+
+            It could be:
+
+              - network failure
+              - timeout
+              - HTTP error
+              - JSON parsing error
+              - etc.
+          */
+
+          lastError = error;
+
+
+          /*
+            VERY IMPORTANT:
+
+            An AbortError is different from a normal failure.
+
+            If the user typed a new query, we intentionally
+            cancelled this request.
+
+            We DO NOT want to retry it.
+
+            Otherwise:
+
+                old search
+                    ↓
+                aborted
+                    ↓
+                retry
+                    ↓
+                old search comes back
+
+            That's exactly what we don't want.
+          */
+          if (signal.aborted) {
+
+            throw new DOMException(
+              "Request aborted",
+              "AbortError"
+            );
+          }
+
+
+          /*
+            Have we used all our retries?
+
+            If yes, don't calculate another delay.
+            Just throw the final error.
+          */
+          if (attempt >= MAX_RETRIES) {
+
+            console.error(
+              `[Search] Failed after ${attempt + 1} attempts`,
+              error
+            );
+
+            throw lastError;
+          }
+
+
+          /*
+          ======================================================
+          EXPONENTIAL BACKOFF CALCULATION
+          ======================================================
+
+          attempt 0:
+
+              1000 * 2^0
+              = 1000ms
+
+          attempt 1:
+
+              1000 * 2^1
+              = 2000ms
+
+          attempt 2:
+
+              1000 * 2^2
+              = 4000ms
+          */
+
+          const exponentialDelay =
+            BASE_RETRY_DELAY_MS *
+            Math.pow(2, attempt);
+
+
+          /*
+          ======================================================
+          JITTER CALCULATION
+          ======================================================
+
+          Math.random() returns a number:
+
+              0 <= number < 1
+
+          Example:
+
+              Math.random()
+              -> 0.47
+
+          Multiply by 500:
+
+              0.47 * 500
+              -> 235
+
+          Math.floor() gives us an integer.
+
+          Therefore jitter will be:
+
+              0ms through 500ms
+          */
+
+          const jitter =
+            Math.floor(
+              Math.random() *
+              (JITTER_MS + 1)
+            );
+
+
+          /*
+            Add the backoff and jitter together.
+
+            Example:
+
+              exponentialDelay = 2000
+              jitter = 327
+
+              retryDelay = 2327ms
+          */
+          const retryDelay =
+            exponentialDelay + jitter;
+
+
+          /*
+            Log exactly what happened.
+
+            This is very useful while learning/debugging.
+          */
+          console.warn(
+            `[Search] Attempt ${attempt + 1} failed.`,
+            error.message
+          );
+
+
+          console.log(
+            `[Search] Retrying in ${retryDelay}ms ` +
+            `(backoff: ${exponentialDelay}ms, ` +
+            `jitter: ${jitter}ms)`
+          );
+
+
+          /*
+            Tell the user how long we're going to wait.
+
+            toFixed(2) converts:
+
+                1327ms
+
+            into:
+
+                1.33s
+          */
+          status.textContent =
+            `Request failed. Retrying in ` +
+            `${(retryDelay / 1000).toFixed(2)}s...`;
+
+
+          /*
+            WAIT before retrying.
+
+            Notice that this isn't:
+
+                await new Promise(...)
+
+            directly.
+
+            We're using our custom sleep() function because
+            it understands AbortController.
+
+            Therefore:
+
+                waiting for retry
+                       +
+                user starts a new search
+                       =
+                sleep is cancelled immediately
+          */
+          await sleep(
+            retryDelay,
+            signal
+          );
+        }
+      }
+
+
+      /*
+        This should normally never be reached because the
+        final attempt throws lastError.
+
+        It is here as a final safety net.
+      */
+      throw lastError;
+    }
+
+
+
+    /*
+    ============================================================
+    7. RENDER SEARCH RESULTS
+    ============================================================
+
+    This function receives the JSON returned by DuckDuckGo
+    and turns it into HTML.
+    */
+
+    function renderResults(data) {
+
+      /*
+        Remove results from the previous search.
+      */
+      results.innerHTML = "";
+
+
+      /*
+        DuckDuckGo may return an "AbstractText".
+
+        For example, a query about Apple might return
+        an informational summary.
+      */
+      if (data.AbstractText) {
+
+        const div = document.createElement("div");
+
+        div.className = "result";
+
+
+        /*
+          We use escapeHtml() before putting API data into
+          innerHTML.
+
+          This is important because external data should
+          never blindly be inserted into HTML.
+        */
+
+        div.innerHTML = `
+          <h3>
+            ${escapeHtml(data.Heading || "Result")}
+          </h3>
+
+          <p>
+            ${escapeHtml(data.AbstractText)}
+          </p>
+
+          ${
+            data.AbstractURL
+              ? `
+                <a
+                  href="${escapeAttribute(data.AbstractURL)}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Read more
+                </a>
+              `
+              : ""
+          }
+        `;
+
+        results.appendChild(div);
+      }
+
+
+      /*
+        DuckDuckGo can also return RelatedTopics.
+
+        Some topics can contain nested Topics.
+
+        flattenTopics() converts the nested structure into
+        one simple array.
+      */
+      const topics =
+        flattenTopics(
+          data.RelatedTopics || []
+        );
+
+
+      /*
+        Loop through every topic and create a result element.
+      */
+      topics.forEach(topic => {
+
+        /*
+          Some objects in RelatedTopics may not have Text.
+        */
+        if (!topic.Text) {
+          return;
+        }
+
+
+        const div =
+          document.createElement("div");
+
+        div.className = "result";
+
+
+        div.innerHTML = `
+          <h3>
+            ${escapeHtml(topic.Text)}
+          </h3>
+
+          ${
+            topic.FirstURL
+              ? `
+                <a
+                  href="${escapeAttribute(topic.FirstURL)}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open result
+                </a>
+              `
+              : ""
+          }
+        `;
+
+
+        results.appendChild(div);
+      });
+
+
+      /*
+        If neither AbstractText nor RelatedTopics produced
+        anything, tell the user there are no results.
+      */
+      if (!results.children.length) {
+
+        results.innerHTML =
+          "<p>No results found.</p>";
+      }
+
+
+      /*
+        The search is finished, so clear the status message.
+      */
+      status.textContent = "";
+    }
+
+
+
+    /*
+    ============================================================
+    8. FLATTEN NESTED TOPICS
+    ============================================================
+
+    DuckDuckGo can return structures like:
+
+        RelatedTopics
+        ├── Topic
+        ├── Topic
+        └── Topics
+            ├── Topic
+            └── Topic
+
+    We want:
+
+        [
+          Topic,
+          Topic,
+          Topic,
+          Topic
+        ]
+
+    This function recursively walks through nested Topics.
+    */
+
+    function flattenTopics(topics) {
+
+      const output = [];
+
+
+      /*
+        Look at each item.
+      */
+      for (const topic of topics) {
+
+        /*
+          If this item has another "Topics" array,
+          recursively process that array.
+        */
+        if (topic.Topics) {
+
+          output.push(
+            ...flattenTopics(topic.Topics)
+          );
+        }
+
+
+        /*
+          Otherwise, if this is an actual topic with text,
+          add it to our output array.
+        */
+        else if (topic.Text) {
+
+          output.push(topic);
+        }
+      }
+
+
+      /*
+        Return the flattened array.
+      */
+      return output;
+    }
+
+
+
+    /*
+    ============================================================
+    9. HTML ESCAPING
+    ============================================================
+
+    This is a security concept worth understanding.
+
+    Imagine an API returned:
+
+        <img src=x onerror="alert('hacked')">
+
+    If we put that directly into innerHTML, the browser
+    could interpret it as HTML.
+
+    escapeHtml() converts special characters into safe
+    HTML entities.
+
+    For example:
+
+        <
+        
+    becomes:
+
+        &lt;
+
+    Therefore the browser displays it as text rather than
+    interpreting it as an HTML element.
+    */
+
+    function escapeHtml(value) {
+
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+
+    /*
+      URLs also go through the same escaping function before
+      being inserted into an HTML attribute.
+    */
+    function escapeAttribute(value) {
+
+      return escapeHtml(value);
+    }
+
+
+
+    /*
+    ============================================================
+    10. PERFORM SEARCH
+    ============================================================
+
+    This function starts a new search.
+
+    It is called AFTER the 500ms debounce period.
+    */
+
+    async function performSearch(query) {
+
+
+      /*
+      ==========================================================
+      CANCEL THE PREVIOUS SEARCH
+      ==========================================================
+
+      Imagine:
+
+        Request A = "apple"
+
+      is still running.
+
+      The user types:
+
+        Request B = "banana"
+
+      Before starting B, cancel A.
+
+      This prevents unnecessary network work and prevents
+      old results from appearing after newer results.
+      */
+
+      if (currentController) {
+
+        console.log(
+          "[Search] Aborting previous request"
+        );
+
+        currentController.abort();
+      }
+
+
+      /*
+        Create a brand-new AbortController for this search.
+
+        Each search gets its own controller.
+
+        Example:
+
+            apple
+              -> Controller A
+
+            banana
+              -> Controller B
+
+            orange
+              -> Controller C
+      */
+      const controller =
+        new AbortController();
+
+
+      /*
+        Remember which controller belongs to the current
+        search.
+      */
+      currentController = controller;
+
+
+      try {
+
+        /*
+          Start the actual API/retry process.
+
+          Because searchDuckDuckGo() is async, await waits
+          for it to finish.
+
+          Eventually one of these happens:
+
+            1. API succeeds
+            2. All retries fail
+            3. Request is aborted
+        */
+        const data =
+          await searchDuckDuckGo(
+            query,
+            controller.signal
+          );
+
+
+        /*
+        ========================================================
+        RACE CONDITION PROTECTION
+        ========================================================
+
+        This is another VERY important concept.
+
+        Imagine:
+
+            Search A starts
+            Search B starts
+
+        Search A might take 3 seconds.
+
+        Search B might take 300ms.
+
+        Therefore:
+
+            B finishes first
+            A finishes later
+
+        Without this check, A could overwrite B's results.
+
+        We only want the results belonging to the current
+        controller.
+        */
+
+        if (
+          controller !== currentController
+        ) {
+          return;
+        }
+
+
+        /*
+          Everything is still current.
+
+          Display the results.
+        */
+        renderResults(data);
+
+
+      } catch (error) {
+
+
+        /*
+        ========================================================
+        IGNORE INTENTIONAL ABORTS
+        ========================================================
+
+        AbortError means:
+
+            "We intentionally cancelled this request."
+
+        That's not something we should show as an error.
+
+        For example, if the user changes:
+
+            apple
+
+        to:
+
+            apples
+
+        we don't want:
+
+            "Search failed!"
+
+        We simply ignore the old request.
+        */
+
+        if (error.name === "AbortError") {
+
+          console.log(
+            "[Search] Request aborted"
+          );
+
+          return;
+        }
+
+
+        /*
+          If we get here, this was a real failure.
+
+          All attempts have failed.
+        */
+        status.innerHTML =
+          `<span class="error">
+            Search failed after
+            ${MAX_RETRIES + 1}
+            attempts:
+            ${escapeHtml(error.message)}
+          </span>`;
+
+
+        results.innerHTML = "";
+
+
+      } finally {
+
+        /*
+        ========================================================
+        CLEANUP
+        ========================================================
+
+        finally runs whether the operation:
+
+          - succeeds
+          - fails
+          - is aborted
+
+        We only clear currentController if it still belongs
+        to THIS search.
+
+        This is another small race-condition protection.
+        */
+
+        if (
+          currentController === controller
+        ) {
+
+          currentController = null;
+        }
+      }
+    }
+
+
+
+    /*
+    ============================================================
+    11. DEBOUNCING
+    ============================================================
+
+    This is probably the most important part for a search box.
+
+    Suppose the user types:
+
+        a
+        p
+        p
+        l
+        e
+
+    Without debounce, we'd potentially make 5 API requests:
+
+        /?q=a
+        /?q=ap
+        /?q=app
+        /?q=appl
+        /?q=apple
+
+    That's wasteful.
+
+    With a 500ms debounce, we wait until the user has stopped
+    typing for 500ms.
+
+    Then we send only:
+
+        /?q=apple
+    */
+
+    searchInput.addEventListener(
+      "input",
+      () => {
+
+        /*
+          Get the current value.
+
+          trim() removes whitespace from the beginning
+          and end.
+
+          Example:
+
+              "  apple  "
+
+          becomes:
+
+              "apple"
+        */
+        const query =
+          searchInput.value.trim();
+
+
+        /*
+        ========================================================
+        RESET THE DEBOUNCE TIMER
+        ========================================================
+
+        Every time the user types, we cancel the previous
+        timer.
+
+        Example:
+
+            User types "a"
+            -> start 500ms timer
+
+            200ms later: user types "p"
+            -> cancel previous timer
+            -> start a new 500ms timer
+
+            200ms later: user types "p"
+            -> cancel previous timer
+            -> start a new 500ms timer
+
+        This continues until the user stops typing.
+        */
+
+        clearTimeout(debounceTimer);
+
+
+        /*
+        ========================================================
+        CANCEL THE PREVIOUS REQUEST
+        ========================================================
+
+        Notice this happens IMMEDIATELY.
+
+        We don't wait for the 500ms debounce.
+
+        If the old request is running while the user starts
+        typing a new query, cancel it immediately.
+        */
+
+        if (currentController) {
+
+          console.log(
+            "[Search] New query detected - " +
+            "aborting old request"
+          );
+
+          currentController.abort();
+
+          currentController = null;
+        }
+
+
+        /*
+          If the input is empty, there is nothing to search.
+        */
+        if (!query) {
+
+          status.textContent = "";
+          results.innerHTML = "";
+
+          return;
+        }
+
+
+        /*
+          Tell the user that we're waiting for the debounce.
+        */
+        status.textContent =
+          "Waiting 500ms...";
+
+
+        /*
+        ========================================================
+        START THE DEBOUNCE TIMER
+        ========================================================
+
+        setTimeout() does NOT block JavaScript.
+
+        It says:
+
+            "Run this function after at least 500ms."
+
+        If another input event happens before 500ms,
+        clearTimeout() above cancels this timer.
+        */
+
+        debounceTimer =
+          setTimeout(() => {
+
+            /*
+              The user has stopped typing for 500ms.
+
+              Now we can actually search.
+            */
+            performSearch(query);
+
+          }, DEBOUNCE_MS);
+      }
+    );
+
+  </script>
+
+</body>
+</html>
+
+<!-- 
+
+User types
+    │
+    ▼
+input event
+    │
+    ▼
+Cancel previous debounce timer
+    │
+    ▼
+Cancel previous API request
+    │
+    ▼
+Wait 500ms
+    │
+    ▼
+Create AbortController
+    │
+    ▼
+Send fetch()
+    │
+    ├── Success ──────────────► Show results
+    │
+    ├── User typed something ─► Abort immediately
+    │
+    ├── Timeout after 5s ─────► Retry
+    │
+    └── Network/HTTP error ───► Retry
+                                  │
+                                  ▼
+                         Exponential backoff
+                                  │
+                                  ▼
+                              + jitter
+                                  │
+                                  ▼
+                              Retry fetch 
+                              
+-->
