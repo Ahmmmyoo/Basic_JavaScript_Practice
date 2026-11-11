@@ -5,3 +5,4 @@ node_modules
 log.txt
 MOCK_DATA_users.json
 .env
+*.txt
