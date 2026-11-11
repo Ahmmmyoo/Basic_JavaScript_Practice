@@ -1,0 +1,16 @@
+{
+  "name": "nodejs",
+  "version": "1.0.0",
+  "description": "practice for nodejs",
+  "type": "commonjs",
+  "main": "p1_buildhttpServer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "mongoose": "^9.12.1",
+    "nodemon": "^3.1.14",
+    "url": "^0.11.4"
+  }
+}
